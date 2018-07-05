@@ -10,6 +10,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -18,6 +21,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Marker myMarker;
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference mProfileRef = firebaseDatabase.getReference();
+    ChildEventListener mChildEventListener;
 
     private GoogleMap mMap;
 
@@ -44,10 +48,59 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        LatLng Copenhagen = new LatLng(55.67, 12.56);
+        mMap.addMarker(new MarkerOptions().position(Copenhagen).title("Marker in Copenhagen"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(Copenhagen));
+    }
+
+    @Override
+    public void onStop(){
+        if(mChildEventListener != null)
+            mProfileRef.removeEventListener(mChildEventListener);
+        super.onStop();
+    }
+
+    private void addMarkersToMap(final GoogleMap map){
+
+        mChildEventListener = mProfileRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                FirebaseMarker marker = dataSnapshot.getValue(FirebaseMarker.class);
+                String StudioName = marker.getStudioName();
+                String StudioAdress = marker.getStudioAddress();
+                String StudioDescription = marker.getStudioDescription();
+                double latitude = marker.getLatitude();
+                double longitude = marker.getLongitude();
+
+                LatLng location = new LatLng(latitude,longitude);
+                map.addMarker(new MarkerOptions()
+                        .position(location)
+                        .title(StudioName)
+                        .snippet(StudioAdress)
+                        .snippet(StudioDescription));
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+        });
     }
 }
