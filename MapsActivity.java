@@ -1,10 +1,12 @@
 package madsmortensen.studior;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-
+import android.view.View;
+import android.widget.Button;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -17,13 +19,15 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference mProfileRef = firebaseDatabase.getReference("Studios");
     ChildEventListener mChildEventListener;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,17 +37,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        Button addAStudio = (Button) findViewById(R.id.addAStudio);
+        addAStudio.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(MapsActivity.this, Rent.class);
+                startActivity(intent);
+            }
+        });
     }
-
-
-//    @Override
-//    public void onMapReady(GoogleMap googleMap) {
-//        mMap = googleMap;
-//        // Add a marker in Copenhagen and move the camera
-//        LatLng Copenhagen = new LatLng(55.67, 12.56);
-//        mMap.addMarker(new MarkerOptions().position(Copenhagen).title("Marker in Copenhagen"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(Copenhagen));
-//    }
 
     @Override
     public void onMapReady(GoogleMap googleMap){
@@ -67,6 +69,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onStop();
     }
 
+
+
     private void addMarkersToMap(final GoogleMap map){
 
         mChildEventListener = mProfileRef.addChildEventListener(new ChildEventListener() {
@@ -84,7 +88,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         .position(location)
                         .title(StudioName)
                         .snippet(StudioAdress)
-                        .snippet(StudioDescription));
+                        .snippet(StudioDescription))
+                        .showInfoWindow();
+
             }
 
             @Override
@@ -114,4 +120,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onMarkerClick(Marker marker) {
         return false;
     }
+
+
 }
