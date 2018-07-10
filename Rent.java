@@ -48,11 +48,11 @@ public class Rent extends AppCompatActivity {
                                     studioNameTextField.getText().toString(),
                                     studioInfoTextField.getText().toString(),
                                     studioAdressTextField.getText().toString(),
-                                    24, 265
+                                    53.669115, 12.560311
                             )
                     );
 
-                    mDataBaseRef.setValue(newStudioAdd);
+                    mDataBaseRef.push().setValue(newStudioAdd);
 
               Intent intent = new Intent(Rent.this, MapsActivity.class);
               startActivity(intent);
