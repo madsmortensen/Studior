@@ -2,6 +2,7 @@ package madsmortensen.studior;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -19,15 +20,13 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
+import com.google.firebase.database.ValueEventListener;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference mProfileRef = firebaseDatabase.getReference("Studios");
     ChildEventListener mChildEventListener;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,52 +68,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onStop();
     }
 
-
-
     private void addMarkersToMap(final GoogleMap map){
-
-        mChildEventListener = mProfileRef.addChildEventListener(new ChildEventListener() {
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference studiosRef = rootRef.child("Studios");
+        ValueEventListener valueEventListener = new ValueEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                FirebaseMarker marker = dataSnapshot.getValue(FirebaseMarker.class);
-                String StudioName = marker.getStudioName();
-                String StudioAdress = marker.getStudioAddress();
-                String StudioDescription = marker.getStudioDescription();
-                double latitude = marker.getLatitude();
-                double longitude = marker.getLongitude();
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds : dataSnapshot.getChildren()) {
+                    FirebaseMarker marker = ds.getValue(FirebaseMarker.class);
+                    String StudioName = marker.getStudioName();
+                    String StudioAdress = marker.getStudioAddress();
+                    String StudioDescription = marker.getStudioDescription();
+                    double latitude = marker.getLatitude();
+                    double longitude = marker.getLongitude();
+                    LatLng location = new LatLng(latitude, longitude);
 
-                LatLng location = new LatLng(latitude,longitude);
-                map.addMarker(new MarkerOptions()
-                        .position(location)
-                        .title(StudioName)
-                        .snippet(StudioAdress)
-                        .snippet(StudioDescription))
-                        .showInfoWindow();
-
+                    map.addMarker(new MarkerOptions()
+                            .position(location)
+                            .title(StudioName)
+                            .snippet(StudioAdress)
+                            .snippet(StudioDescription));
+                }
             }
 
             @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            public void onCancelled(DatabaseError databaseError) {}
+        };
+        studiosRef.addListenerForSingleValueEvent(valueEventListener);
 
-            }
 
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-
-        });
-    }
+        }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
