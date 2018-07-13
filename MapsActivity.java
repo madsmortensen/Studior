@@ -2,7 +2,6 @@ package madsmortensen.studior;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -22,7 +21,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, GoogleMap.OnInfoWindowClickListener {
 
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference mProfileRef = firebaseDatabase.getReference("Studios");
@@ -40,16 +39,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Button addAStudio = (Button) findViewById(R.id.addAStudio);
         addAStudio.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent(MapsActivity.this, Rent.class);
+                Intent intent = new Intent(MapsActivity.this, AddStudio.class);
                 startActivity(intent);
             }
         });
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap){
+    public void onMapReady(GoogleMap googleMap) {
         googleMap.setOnMarkerClickListener(this);
-        LatLng  Copenhagen = new LatLng(55.67, 12.56);
+        googleMap.setOnInfoWindowClickListener(this);
+        LatLng Copenhagen = new LatLng(55.67, 12.56);
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Copenhagen, 18));
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         //get marker info from Firebase Database and add to map
@@ -62,19 +62,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onStop(){
-        if(mChildEventListener != null)
+    public void onStop() {
+        if (mChildEventListener != null)
             mProfileRef.removeEventListener(mChildEventListener);
         super.onStop();
     }
 
-    private void addMarkersToMap(final GoogleMap map){
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Intent intent = new Intent(MapsActivity.this, Rent.class);
+        startActivity(intent);
+    }
+
+    private void addMarkersToMap(final GoogleMap map) {
         DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
         DatabaseReference studiosRef = rootRef.child("Studios");
         ValueEventListener valueEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds : dataSnapshot.getChildren()) {
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     FirebaseMarker marker = ds.getValue(FirebaseMarker.class);
                     String StudioName = marker.getStudioName();
                     String StudioAdress = marker.getStudioAddress();
@@ -92,17 +98,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+            }
         };
         studiosRef.addListenerForSingleValueEvent(valueEventListener);
 
 
-        }
+
+    }
+
+
 
     @Override
     public boolean onMarkerClick(Marker marker) {
         return false;
     }
+
 
 
 }
